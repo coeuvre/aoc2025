@@ -7,30 +7,27 @@ const Grid = struct {
     width: usize,
     height: usize,
 
-    fn get(self: *const Grid, x: usize, y: usize) ?u8 {
-        if (y < self.height and x < self.width) {
-            return self.cells[y * self.width + x];
-        }
-        return null;
+    fn get(self: *const Grid, x: usize, y: usize) u8 {
+        std.debug.assert(x < self.width and y < self.height);
+        return self.cells[y * self.width + x];
     }
 
     fn set(self: *Grid, x: usize, y: usize, val: u8) void {
+        std.debug.assert(x < self.width and y < self.height);
         self.cells[y * self.width + x] = val;
     }
 };
 
 fn countAdjacentRolls(grid: *const Grid, x: usize, y: usize) usize {
     var count: usize = 0;
-    var yy = if (y > 0) y - 1 else y;
-    while (yy <= y + 1) : (yy += 1) {
-        var xx = if (x > 0) x - 1 else x;
-        while (xx <= x + 1) : (xx += 1) {
-            if (xx != x or yy != y) {
-                if (grid.get(xx, yy)) |cell| {
-                    if (cell != '.') {
-                        count += 1;
-                    }
-                }
+    const min_x = if (x > 0) x - 1 else x;
+    const min_y = if (y > 0) y - 1 else y;
+    const max_x = if (x + 1 < grid.width) x + 1 else x;
+    const max_y = if (y + 1 < grid.height) y + 1 else y;
+    for (min_y..max_y + 1) |yy| {
+        for (min_x..max_x + 1) |xx| {
+            if ((xx != x or yy != y) and grid.get(xx, yy) != '.') {
+                count += 1;
             }
         }
     }
@@ -43,7 +40,7 @@ fn solve(grid: *Grid) !void {
         var removed: usize = 0;
         for (0..grid.height) |y| {
             for (0..grid.width) |x| {
-                if (grid.get(x, y).? != '.') {
+                if (grid.get(x, y) != '.') {
                     const adj = countAdjacentRolls(grid, x, y);
                     if (adj < 4) {
                         grid.set(x, y, '.');
